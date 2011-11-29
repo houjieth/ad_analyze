@@ -1,0 +1,5 @@
+1. "ad blocker" : shut off internet connection
+2. "adaway" : use hosts file. Not get its hosts file yet
+3. "android-adblock" : use http domain name keyword filtering.
+4. "adfree" : use hosts file. Got it from http://www.mvps.org/winhelp2002/hosts.txt
+

@@ -1,0 +1,7 @@
+1. use keywords like "ad" matching for identifying ads site
+2. use known ad hosts got from Internet
+3. show how many tcp connection it makes
+4. show how much data for ads
+5. show the frequency for asking for ads
+6. see cache usage for ads?
+

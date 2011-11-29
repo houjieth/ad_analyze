@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename Java project &apos;pcap_parser&apos; to &apos;ad_analyze&apos;&#x0A;- Original element: &apos;pcap_parser&apos;&#x0A;- Renamed element: &apos;pcap_parser&apos;&#x0A;- Update references to refactored element" description="Rename Java project &apos;pcap_parser&apos;" flags="7" id="org.eclipse.jdt.ui.rename.java.project" input="=pcap_parser" name="ad_analyze" references="true" stamp="1322594634190" version="1.0"/>
+</session>

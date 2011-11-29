@@ -1,0 +1,13 @@
+/data/data/com.skype.raider/files/skypekit
+/sbin/adbd
+com.fd.httpd
+com.tencent.mm
+com.tencent.mobileqq
+com.google.process.gapps
+com.mobiperf
+com.google.android.apps.maps:NetworkLocationService
+system_server
+com.baidu.input
+com.skype.raider
+com.rovio.angrybirdsseasons
+/system/bin/netd

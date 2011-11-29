@@ -1,0 +1,5 @@
+ad_analyze folder contains the main pcap parser and ad analyzer.
+
+jpcap folder contains the library needed to run the pcap parser.
+
+Other files are just other files.
