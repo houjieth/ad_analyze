@@ -5,18 +5,36 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class AdAnalyzer {
 	private HashMap<Integer, String> appNameMap;
-	private ArrayList<Packet> packets;
-	private ArrayList<Packet> adPackets;
-	private ArrayList<Packet> adDNSPackets;
+	public ArrayList<Packet> packets;
+	public ArrayList<Packet> adPackets;
+	public ArrayList<Packet> adDNSPackets;
 	private AdList adlist;
-	private ArrayList<String> adDNSRequests;
-	private ArrayList<InetAddress> adAddrs;
+	public ArrayList<String> adDNSRequests;
+	public ArrayList<InetAddress> adAddrs;
 	
+	public int all_size = 0;
+	
+	public void init(String[] args) {
+		readNameMap(args[1]);
+		readCapFile(args[0]);
+		String[] files = new String[args.length - 2];
+		for (int i = 2, j = 0; i < args.length; i++) {
+			files[j] = args[i];
+			j++;
+		}
+		try {
+			adlist.init(files);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public AdAnalyzer() {
 		appNameMap = new HashMap<Integer, String>();
@@ -26,16 +44,16 @@ public class AdAnalyzer {
 		adDNSRequests = new ArrayList<String>();
 		adAddrs = new ArrayList<InetAddress>();
 		adlist = new AdList();
-		adlist.init();
 	}
 	
+
 	public void readNameMap(String nameMapFileName) {
 		try {
 			int i = 0;
 			FileReader fr = new FileReader(nameMapFileName);
 			BufferedReader br = new BufferedReader(fr);
 			String str = br.readLine();
-			while(str != null) {
+			while (str != null) {
 				appNameMap.put(new Integer(i), str);
 				i++;
 				str = br.readLine();
@@ -44,83 +62,73 @@ public class AdAnalyzer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void readCapFile(String capFileName) {
 		try {
 			JpcapCaptor captor = JpcapCaptor.openFile(capFileName);
-			while(true){
+			while (true) {
 				Packet packet = captor.getPacket();
-				if(packet == null || packet == Packet.EOF) 
+				if (packet == null || packet == Packet.EOF)
 					break;
 				else
-					packets.add(packet);	
+					packets.add(packet);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public boolean isTCPPacket(Packet p) {
 		if (p instanceof TCPPacket) {
 			return true;
-		}
-		else
+		} else
 			return false;
 	}
-	
+
 	public boolean isUDPPacket(Packet p) {
 		if (p instanceof UDPPacket) {
 			return true;
-		}
-		else 
+		} else
 			return false;
 	}
-	
+
 	public boolean isDNSPacket(Packet p) {
 		if (p instanceof TCPPacket) {
-			TCPPacket pp = (TCPPacket)p;
+			TCPPacket pp = (TCPPacket) p;
 			if (pp.src_port == Port.DNS || pp.dst_port == Port.DNS) {
 				return true;
-			}
-			else
+			} else
 				return false;
-		}
-		else if (p instanceof UDPPacket) {
-			UDPPacket pp = (UDPPacket)p;
+		} else if (p instanceof UDPPacket) {
+			UDPPacket pp = (UDPPacket) p;
 			if (pp.src_port == Port.DNS || pp.dst_port == Port.DNS) {
 				return true;
-			}
-			else
+			} else
 				return false;
-		}
-		else
+		} else
 			return false;
 	}
-	
+
 	public boolean isHTTPPacket(Packet p) {
 		if (p instanceof TCPPacket) {
-			TCPPacket pp = (TCPPacket)p;
+			TCPPacket pp = (TCPPacket) p;
 			if (pp.src_port == Port.HTTP || pp.dst_port == Port.HTTP) {
 				return true;
-			}
-			else
+			} else
 				return false;
-		}
-		else if (p instanceof UDPPacket) {
-			UDPPacket pp = (UDPPacket)p;
+		} else if (p instanceof UDPPacket) {
+			UDPPacket pp = (UDPPacket) p;
 			if (pp.src_port == Port.HTTP || pp.dst_port == Port.HTTP) {
 				return true;
-			}
-			else
+			} else
 				return false;
-		}
-		else
+		} else
 			return false;
 	}
-	
+
 	public boolean isUpLink(Packet p) {
 		byte[] header = p.header;
-		int linkType= new Integer(header[10]);
+		int linkType = new Integer(header[10]);
 		if (linkType == 1)
 			return true;
 		else
@@ -130,25 +138,24 @@ public class AdAnalyzer {
 	public boolean isDownLink(Packet p) {
 		return !isUpLink(p);
 	}
-	
+
 	public Integer getAppNameIndex(Packet p) {
 		byte[] header = p.header;
-		int appNameIndex= new Integer(header[6]);
+		int appNameIndex = new Integer(header[6]);
 		return appNameIndex;
 	}
-	
+
 	public String getAppNameFromIndex(Integer index) {
 		return appNameMap.get(index);
 	}
-	
+
 	public void printPacket(Packet p) {
 		if (isTCPPacket(p)) {
-			TCPPacket pp = (TCPPacket)p;
+			TCPPacket pp = (TCPPacket) p;
 			System.out.print("[TCP]");
 			if (isDNSPacket(pp)) {
 				System.out.print("[DNS]\t");
-			}
-			else if (isHTTPPacket(pp))
+			} else if (isHTTPPacket(pp))
 				System.out.print("[HTTP]\t");
 			else
 				System.out.print("\t");
@@ -159,14 +166,12 @@ public class AdAnalyzer {
 				System.out.print("(UPLINK)");
 			else
 				System.out.print("(DOWNLINK)");
-		}
-		else if (isUDPPacket(p)) {
-			UDPPacket pp = (UDPPacket)p;
+		} else if (isUDPPacket(p)) {
+			UDPPacket pp = (UDPPacket) p;
 			System.out.print("[UDP]");
 			if (isDNSPacket(pp)) {
 				System.out.print("[DNS]\t");
-			}
-			else if (isHTTPPacket(pp))
+			} else if (isHTTPPacket(pp))
 				System.out.print("[HTTP]\t");
 			else
 				System.out.print("\t");
@@ -177,28 +182,30 @@ public class AdAnalyzer {
 				System.out.print("(UPLINK)");
 			else
 				System.out.print("(DOWNLINK)");
-		}
-		else
+		} else
 			System.out.print("[OTHER]\t");
+		System.out.print(p.len);
+		all_size += p.len;
 	}
-	
+
 	public void printAllPackets() {
 		int i = 1;
-		System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down\n");
+		System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down");
 		for (Packet p : packets) {
+			//inspectPacket(p);
 			System.out.print(i + "\t");
 			printPacket(p);
 			System.out.print("\n");
 			i++;
 		}
 	}
-	
+
 	public void inspectPacket(Packet p) {
 		printPacket(p);
 		if (isDNSPacket(p)) {
 			if (isUpLink(p)) {
 				String DNSRequest = getDNSRequest(p.data);
-				if (adlist.match(DNSRequest)) {
+				if (adlist.vagueMatch(DNSRequest, 1)) {
 					adDNSRequests.add(DNSRequest);
 					adDNSPackets.add(p);
 					System.out.println("AD DNS REQUEST " + DNSRequest);
@@ -207,11 +214,11 @@ public class AdAnalyzer {
 			else if (isDownLink(p)) {
 				String DNSRequest = getDNSRequest(p.data);
 				if (isAdDNSRequest(DNSRequest)) {
-					ArrayList<InetAddress> addrs = getDNSAddrs(p.data);
+					ArrayList<InetAddress> addrs = (ArrayList<InetAddress>)getDNSAddrs(p.data);
 					for (InetAddress a : addrs)
 						adAddrs.add(a);
 					adDNSPackets.add(p);
-					System.out.println("AD DNS ANSWER " + DNSRequest + " -> " + adAddr);
+					System.out.println("AD DNS ANSWER " + DNSRequest);
 				}
 			}
 		}
@@ -245,6 +252,7 @@ public class AdAnalyzer {
 				}
 			}
 		}
+		System.out.println();
 	}
 	
 	public boolean isAdDNSRequest(String request) {
@@ -262,9 +270,76 @@ public class AdAnalyzer {
 	}
 	
 	public void inspectAllPackets() {
-		System.out.println("STARTING INSPECTION")
+		System.out.println("STARTING INSPECTION");
 		for (Packet p : packets) {
 			inspectPacket(p);
 		}
+	}
+
+	private static int byteToInt2(byte[] b, int from, int size) {
+
+		int mask = 0xff;
+		int temp = 0;
+		int n = 0;
+		for (int i = 0; i < size; i++) {
+			n <<= 8;
+			temp = b[from + i] & mask;
+			n |= temp;
+		}
+		return n;
+	}
+
+	private List<InetAddress> getDNSAddrs(byte[] bytes) {
+
+		List<InetAddress> result = new ArrayList<InetAddress>();
+		try {
+			int numAns = byteToInt2(bytes, 6, 2);
+			int i = 12;
+			while ((int) bytes[i] != 0)
+				++i;
+			i += 5;
+			for (int j = 0; j < numAns; ++j) {
+				i += 2;
+
+				int type = byteToInt2(bytes, i, 2);
+				boolean Atype = (type == 1);
+				// goto length
+				i += 8;
+				int l = byteToInt2(bytes, i, 2);
+				i += 2;
+				byte addr[] = new byte[l];
+
+				for (int k = 0; k < l; ++k)
+					addr[k] = bytes[i + k];
+
+				i += l;
+				if (Atype)
+					try {
+						result.add(InetAddress.getByAddress(addr));
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			}
+			return result;
+		} catch (ArrayIndexOutOfBoundsException aiobe) {
+			return result;
+		}
+	}
+
+	private String getDNSRequest(byte[] bytes) {
+		String s = new String();
+		int i = 12;
+		int l = (int) bytes[i];
+		while (l != 0) {
+			for (int j = 1; j <= l; ++j) {
+				s += (char) bytes[i + j];
+			}
+			i += l + 1;
+			l = (int) bytes[i];
+			if (l != 0)
+				s += ".";
+		}
+		return s;
 	}
 }
