@@ -1,0 +1,5 @@
+
+public class Port {
+	final public int HTTP = 80;
+	final public int DNS = 53;
+}
