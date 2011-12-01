@@ -1,0 +1,38 @@
+import java.io.IOException;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.util.HashMap;
+
+import jpcap.*;
+import jpcap.packet.*;
+
+public class Main {
+
+	public static void main(String[] args) {
+		// args[0] : .pcap filename
+		// args[1] : -name.pcap filename	
+		try {
+			AdAnalyzer aa = new AdAnalyzer();
+			aa.readNameMap(args[1]);
+			aa.readCapFile(args[0]);
+			
+			JpcapCaptor captor = JpcapCaptor.openFile("/Users/jiehou/F11/Projects/Network/tcpdump/357814048631090/1321485257_bg_2011-11-16-18-36-30.pcap");
+			String[] ad_servers = {"141.212.113.211"};
+			AdAnalyzer filter = new AdAnalyzer(ad_servers, appNameMap);
+			i = 1;
+			while(true){
+				//read a packet from the opened file
+				Packet packet=captor.getPacket();
+				//if some error occurred or EOF has reached, break the loop
+				if(packet == null || packet == Packet.EOF) break;
+				//otherwise, print out the packet	  
+				System.out.print(i++ + " ");
+				filter.display(packet);	
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+}

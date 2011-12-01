@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/ad_analyze/src/Main.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="Main"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05.pcap /Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05-appname.pcap"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="ad_analyze"/>
+</launchConfiguration>
