@@ -4,6 +4,7 @@ import jpcap.packet.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -11,11 +12,21 @@ public class AdAnalyzer {
 	private HashMap<Integer, String> appNameMap;
 	private ArrayList<Packet> packets;
 	private ArrayList<Packet> adPackets;
+	private ArrayList<Packet> adDNSPackets;
+	private AdList adlist;
+	private ArrayList<String> adDNSRequests;
+	private ArrayList<InetAddress> adAddrs;
+	
 	
 	public AdAnalyzer() {
 		appNameMap = new HashMap<Integer, String>();
 		packets = new ArrayList<Packet>();
 		adPackets = new ArrayList<Packet>();
+		adDNSPackets = new ArrayList<Packet>();
+		adDNSRequests = new ArrayList<String>();
+		adAddrs = new ArrayList<InetAddress>();
+		adlist = new AdList();
+		adlist.init();
 	}
 	
 	public void readNameMap(String nameMapFileName) {
@@ -116,6 +127,10 @@ public class AdAnalyzer {
 			return false;
 	}
 	
+	public boolean isDownLink(Packet p) {
+		return !isUpLink(p);
+	}
+	
 	public Integer getAppNameIndex(Packet p) {
 		byte[] header = p.header;
 		int appNameIndex= new Integer(header[6]);
@@ -179,10 +194,77 @@ public class AdAnalyzer {
 	}
 	
 	public void inspectPacket(Packet p) {
+		printPacket(p);
 		if (isDNSPacket(p)) {
 			if (isUpLink(p)) {
 				String DNSRequest = getDNSRequest(p.data);
+				if (adlist.match(DNSRequest)) {
+					adDNSRequests.add(DNSRequest);
+					adDNSPackets.add(p);
+					System.out.println("AD DNS REQUEST " + DNSRequest);
+				}
 			}
+			else if (isDownLink(p)) {
+				String DNSRequest = getDNSRequest(p.data);
+				if (isAdDNSRequest(DNSRequest)) {
+					ArrayList<InetAddress> addrs = getDNSAddrs(p.data);
+					for (InetAddress a : addrs)
+						adAddrs.add(a);
+					adDNSPackets.add(p);
+					System.out.println("AD DNS ANSWER " + DNSRequest + " -> " + adAddr);
+				}
+			}
+		}
+		else if (isTCPPacket(p)) {
+			TCPPacket pp = (TCPPacket)p;
+			if (isUpLink(pp)) {
+				if (isAdAddr(pp.dst_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD TCP UPLINK");
+				}
+			}
+			else if (isDownLink(pp)) {
+				if (isAdAddr(pp.src_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD TCP DOWNLINK");
+				}
+			}
+		}
+		else if (isUDPPacket(p)) {
+			UDPPacket pp = (UDPPacket)p;
+			if (isUpLink(pp)) {
+				if (isAdAddr(pp.dst_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD UDP UPLINK");
+				}
+			}
+			else if (isDownLink(pp)) {
+				if (isAdAddr(pp.src_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD UDP DOWNLINK");
+				}
+			}
+		}
+	}
+	
+	public boolean isAdDNSRequest(String request) {
+		if (adDNSRequests.indexOf(request) != -1)
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean isAdAddr(InetAddress addr) {
+		if (adAddrs.indexOf(addr) != -1)
+			return true;
+		else
+			return false;
+	}
+	
+	public void inspectAllPackets() {
+		System.out.println("STARTING INSPECTION")
+		for (Packet p : packets) {
+			inspectPacket(p);
 		}
 	}
 }
