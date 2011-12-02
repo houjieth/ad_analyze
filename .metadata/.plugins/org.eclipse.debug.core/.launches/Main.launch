@@ -7,6 +7,6 @@
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="Main"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05.pcap /Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05-appname.pcap"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05.pcap /Users/jiehou/F11/Projects/Network/tcpdump/angry_bird/1322499842_bg_2011-11-28-12-04-05-appname.pcap /Users/jiehou/F11/Projects/Network/ad_hosts/hosts1.txt /Users/jiehou/F11/Projects/Network/ad_hosts/hosts2.txt"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="ad_analyze"/>
 </launchConfiguration>

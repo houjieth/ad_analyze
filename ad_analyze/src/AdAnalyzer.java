@@ -12,14 +12,40 @@ import java.util.List;
 
 public class AdAnalyzer {
 	private HashMap<Integer, String> appNameMap;
-	private ArrayList<Packet> packets;
-	private ArrayList<Packet> adPackets;
-
+	public ArrayList<Packet> packets;
+	public ArrayList<Packet> adPackets;
+	public ArrayList<Packet> adDNSPackets;
+	private AdList adlist;
+	public ArrayList<String> adDNSRequests;
+	public ArrayList<InetAddress> adAddrs;
+	
+	public int all_size = 0;
+	
+	public void init(String[] args) {
+		readNameMap(args[1]);
+		readCapFile(args[0]);
+		String[] files = new String[args.length - 2];
+		for (int i = 2, j = 0; i < args.length; i++) {
+			files[j] = args[i];
+			j++;
+		}
+		try {
+			adlist.init(files);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public AdAnalyzer() {
 		appNameMap = new HashMap<Integer, String>();
 		packets = new ArrayList<Packet>();
 		adPackets = new ArrayList<Packet>();
+		adDNSPackets = new ArrayList<Packet>();
+		adDNSRequests = new ArrayList<String>();
+		adAddrs = new ArrayList<InetAddress>();
+		adlist = new AdList();
 	}
+	
 
 	public void readNameMap(String nameMapFileName) {
 		try {
@@ -108,6 +134,10 @@ public class AdAnalyzer {
 		else
 			return false;
 	}
+	
+	public boolean isDownLink(Packet p) {
+		return !isUpLink(p);
+	}
 
 	public Integer getAppNameIndex(Packet p) {
 		byte[] header = p.header;
@@ -154,34 +184,95 @@ public class AdAnalyzer {
 				System.out.print("(DOWNLINK)");
 		} else
 			System.out.print("[OTHER]\t");
+		System.out.print(p.len);
+		all_size += p.len;
 	}
 
 	public void printAllPackets() {
 		int i = 1;
-		//System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down\n");
+		System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down");
 		for (Packet p : packets) {
-			inspectPacket(p);
-			//System.out.print(i + "\t");
-			//printPacket(p);
-			//System.out.print("\n");
-			//i++;
+			//inspectPacket(p);
+			System.out.print(i + "\t");
+			printPacket(p);
+			System.out.print("\n");
+			i++;
 		}
 	}
 
 	public void inspectPacket(Packet p) {
+		printPacket(p);
 		if (isDNSPacket(p)) {
 			if (isUpLink(p)) {
 				String DNSRequest = getDNSRequest(p.data);
-			} else {
-				String DNSRequest = getDNSRequest(p.data);
-				List<InetAddress> DNSAddr = getDNSAddr(p.data);
-				System.out.print("DNDAnswer: (" + DNSRequest + ")");
-				for (InetAddress ia : DNSAddr)
-				{
-					System.out.print("\t" + ia.toString());
+				if (adlist.vagueMatch(DNSRequest, 1)) {
+					adDNSRequests.add(DNSRequest);
+					adDNSPackets.add(p);
+					System.out.println("AD DNS REQUEST " + DNSRequest);
 				}
-				System.out.println("\n");
 			}
+			else if (isDownLink(p)) {
+				String DNSRequest = getDNSRequest(p.data);
+				if (isAdDNSRequest(DNSRequest)) {
+					ArrayList<InetAddress> addrs = (ArrayList<InetAddress>)getDNSAddrs(p.data);
+					for (InetAddress a : addrs)
+						adAddrs.add(a);
+					adDNSPackets.add(p);
+					System.out.println("AD DNS ANSWER " + DNSRequest);
+				}
+			}
+		}
+		else if (isTCPPacket(p)) {
+			TCPPacket pp = (TCPPacket)p;
+			if (isUpLink(pp)) {
+				if (isAdAddr(pp.dst_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD TCP UPLINK");
+				}
+			}
+			else if (isDownLink(pp)) {
+				if (isAdAddr(pp.src_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD TCP DOWNLINK");
+				}
+			}
+		}
+		else if (isUDPPacket(p)) {
+			UDPPacket pp = (UDPPacket)p;
+			if (isUpLink(pp)) {
+				if (isAdAddr(pp.dst_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD UDP UPLINK");
+				}
+			}
+			else if (isDownLink(pp)) {
+				if (isAdAddr(pp.src_ip)) {
+					adPackets.add(pp);
+					System.out.println("AD UDP DOWNLINK");
+				}
+			}
+		}
+		System.out.println();
+	}
+	
+	public boolean isAdDNSRequest(String request) {
+		if (adDNSRequests.indexOf(request) != -1)
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean isAdAddr(InetAddress addr) {
+		if (adAddrs.indexOf(addr) != -1)
+			return true;
+		else
+			return false;
+	}
+	
+	public void inspectAllPackets() {
+		System.out.println("STARTING INSPECTION");
+		for (Packet p : packets) {
+			inspectPacket(p);
 		}
 	}
 
@@ -198,7 +289,7 @@ public class AdAnalyzer {
 		return n;
 	}
 
-	private List<InetAddress> getDNSAddr(byte[] bytes) {
+	private List<InetAddress> getDNSAddrs(byte[] bytes) {
 
 		List<InetAddress> result = new ArrayList<InetAddress>();
 		try {
@@ -251,5 +342,4 @@ public class AdAnalyzer {
 		}
 		return s;
 	}
-
 }
