@@ -158,13 +158,13 @@ public class AdAnalyzer {
 
 	public void printAllPackets() {
 		int i = 1;
-		System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down\n");
+		//System.out.println("#\ttype\tsrc\t\t\tdst\t\t\tappName\t\tup/down\n");
 		for (Packet p : packets) {
 			inspectPacket(p);
-			System.out.print(i + "\t");
-			printPacket(p);
-			System.out.print("\n");
-			i++;
+			//System.out.print(i + "\t");
+			//printPacket(p);
+			//System.out.print("\n");
+			//i++;
 		}
 	}
 
@@ -175,6 +175,12 @@ public class AdAnalyzer {
 			} else {
 				String DNSRequest = getDNSRequest(p.data);
 				List<InetAddress> DNSAddr = getDNSAddr(p.data);
+				System.out.print("DNDAnswer: (" + DNSRequest + ")");
+				for (InetAddress ia : DNSAddr)
+				{
+					System.out.print("\t" + ia.toString());
+				}
+				System.out.println("\n");
 			}
 		}
 	}
