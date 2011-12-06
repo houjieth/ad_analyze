@@ -1,17 +1,17 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 		AdAnalyzer aa = new AdAnalyzer();
 		aa.init(args);
-		aa.printAllPackets();
+		//System.setOut(new PrintStream(new File("/Users/jiehou/Desktop/output")));
+		//aa.printAllPackets();
 		aa.inspectAllPackets();
-		System.out.println("size of adPackets " + aa.adPackets.size());
-		System.out.println("size of adDNSPackets " + aa.adDNSPackets.size());
-		System.out.println("size of adDNSRequests " + aa.adDNSRequests.size());
-		System.out.println("size of adAddrs " + aa.adAddrs.size());
-		System.out.println("all_size" + aa.all_size);
+		aa.showResultForSpecificProgram("twc.weatherController");
 	}
 }

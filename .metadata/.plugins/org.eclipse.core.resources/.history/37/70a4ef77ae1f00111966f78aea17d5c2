@@ -1,0 +1,24 @@
+import java.io.IOException;
+
+
+public class Main {
+
+	public static void main(String[] args) {
+		AdAnalyzer aa = new AdAnalyzer();
+		aa.init(args);
+		//aa.printAllPackets();
+		//aa.inspectAllPackets();
+		aa.inspectAllPacketsForSpecificProgram("com.rovio.angrybirdsseasons");
+		
+		System.out.println("size of adPackets " + aa.adPackets.size());
+		System.out.println("size of adDNSPackets " + aa.adDNSPackets.size());
+		System.out.println("size of adDNSRequests " + aa.adDNSRequests.size());
+		System.out.println("size of adAddrs " + aa.adAddrs.size());
+		
+		aa.calculateAdSize();
+		aa.calculateAllSize();
+		
+		System.out.println("ad_size " + aa.ad_size);
+		System.out.println("all_size " + aa.all_size);
+	}
+}

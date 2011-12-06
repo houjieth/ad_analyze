@@ -70,6 +70,8 @@ public class AdList {
 	{
 		if(line.startsWith("#"))
 			return null;
-		return line.split(" ")[1];
+		String ss[] = line.split(" ");
+		
+		return ss[ss.length - 1];
 	}
 }
