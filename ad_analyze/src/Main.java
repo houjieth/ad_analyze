@@ -11,7 +11,8 @@ public class Main {
 		aa.init(args);
 		//System.setOut(new PrintStream(new File("/Users/jiehou/Desktop/output")));
 		//aa.printAllPackets();
-		aa.inspectAllPackets();
-		aa.showResultForSpecificProgram("twc.weatherController");
+		//aa.inspectAllPackets();
+		aa.inspectAllPacketsTime("com.rovio.angrybirdsseasons");
+		//aa.showResultForSpecificProgram("com.rovio.angrybirdsseasons");
 	}
 }

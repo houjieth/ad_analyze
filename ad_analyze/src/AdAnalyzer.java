@@ -2,8 +2,14 @@ import jpcap.JpcapCaptor;
 import jpcap.packet.*;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -20,11 +26,12 @@ public class AdAnalyzer {
 	private AdList adlist;
 	private ArrayList<String> adDNSRequests;
 	private ArrayList<InetAddress> adAddrs;
-	
+
 	private int ad_size = 0;
 	private int all_size = 0;
-	
-	public AdAnalyzer() {
+	private PrintWriter sizePw;
+	private PrintWriter timePw;
+	public AdAnalyzer() throws FileNotFoundException {
 		appNameMap = new HashMap<Integer, String>();
 		packets = new ArrayList<Packet>();
 		adPackets = new ArrayList<Packet>();
@@ -32,8 +39,18 @@ public class AdAnalyzer {
 		adDNSRequests = new ArrayList<String>();
 		adAddrs = new ArrayList<InetAddress>();
 		adlist = new AdList();
+		String sizeFileName = "/root/programming/AdLibrary/ad_analyze/size.txt";
+		String timeFileName = "/root/programming/AdLibrary/ad_analyze/time.txt";
+		File sizeFile = new File(sizeFileName);
+		File timeFile = new File(timeFileName);
+		FileOutputStream sizeOs = new FileOutputStream(sizeFile);
+		FileOutputStream timeOs = new FileOutputStream(timeFile);
+		OutputStreamWriter sizeOsw = new OutputStreamWriter(sizeOs);
+		OutputStreamWriter timeOsw = new OutputStreamWriter(timeOs);
+		sizePw = new PrintWriter(sizeOsw);
+		timePw = new PrintWriter(timeOsw);
 	}
-	
+
 	public void init(String[] args) {
 		readNameMap(args[1]);
 		readCapFile(args[0]);
@@ -48,7 +65,7 @@ public class AdAnalyzer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void readNameMap(String nameMapFileName) {
 		try {
 			int i = 0;
@@ -141,7 +158,7 @@ public class AdAnalyzer {
 		else
 			return false;
 	}
-	
+
 	public boolean isDownLink(Packet p) {
 		return !isUpLink(p);
 	}
@@ -205,6 +222,27 @@ public class AdAnalyzer {
 		}
 	}
 
+	public void inspectPacketTime(Packet p) {
+		//String name = getAppNameFromIndex(getAppNameIndex(p));
+		sizePw.println(p.len);
+		timePw.println(p.sec);
+	}
+
+	public void inspectPacketTime(Packet p, String appName) {
+		String name = getAppNameFromIndex(getAppNameIndex(p));
+		if (name == null)
+			return;
+		if (!name.equals(appName))
+			return;
+		if (isUpLink(p))
+			return;
+		sizePw.println(p.len);
+		timePw.println(p.sec);
+
+		
+	}
+
+	
 	public void inspectPacket(Packet p) {
 		printPacket(p);
 		all_size += p.len;
@@ -217,10 +255,9 @@ public class AdAnalyzer {
 					adDNSPackets.add(p);
 					System.out.print(" AD DNS REQUEST " + DNSRequest);
 				}
-			}
-			else if (isDownLink(p)) {
+			} else if (isDownLink(p)) {
 				System.out.print("respons to request " + DNSRequest + ": ");
-				ArrayList<InetAddress> addrs = (ArrayList<InetAddress>)getDNSAddrs(p.data);
+				ArrayList<InetAddress> addrs = (ArrayList<InetAddress>) getDNSAddrs(p.data);
 				for (InetAddress a : addrs)
 					System.out.print(a + " ");
 				if (isAdDNSRequest(DNSRequest)) {
@@ -230,31 +267,27 @@ public class AdAnalyzer {
 					System.out.print(" AD DNS ANSWER ");
 				}
 			}
-		}
-		else if (isTCPPacket(p)) {
-			TCPPacket pp = (TCPPacket)p;
+		} else if (isTCPPacket(p)) {
+			TCPPacket pp = (TCPPacket) p;
 			if (isUpLink(pp)) {
 				if (isAdAddr(pp.dst_ip)) {
 					adPackets.add(pp);
 					System.out.print(" AD TCP UPLINK");
 				}
-			}
-			else if (isDownLink(pp)) {
+			} else if (isDownLink(pp)) {
 				if (isAdAddr(pp.src_ip)) {
 					adPackets.add(pp);
 					System.out.print(" AD TCP DOWNLINK");
 				}
 			}
-		}
-		else if (isUDPPacket(p)) {
-			UDPPacket pp = (UDPPacket)p;
+		} else if (isUDPPacket(p)) {
+			UDPPacket pp = (UDPPacket) p;
 			if (isUpLink(pp)) {
 				if (isAdAddr(pp.dst_ip)) {
 					adPackets.add(pp);
 					System.out.print(" AD UDP UPLINK");
 				}
-			}
-			else if (isDownLink(pp)) {
+			} else if (isDownLink(pp)) {
 				if (isAdAddr(pp.src_ip)) {
 					adPackets.add(pp);
 					System.out.print(" AD UDP DOWNLINK");
@@ -263,46 +296,65 @@ public class AdAnalyzer {
 		}
 		System.out.println();
 	}
-	
-	
+
 	public boolean isAdDNSRequest(String request) {
 		if (adDNSRequests.indexOf(request) != -1)
 			return true;
 		else
 			return false;
 	}
-	
+
 	public boolean isAdAddr(InetAddress addr) {
 		if (adAddrs.indexOf(addr) != -1)
 			return true;
 		else
 			return false;
 	}
+
+	public void inspectAllPacketsTime() {
+		System.out.println("STARTING INSPECTION WITH TIME");
+		for (Packet p : packets) {
+			inspectPacketTime(p);
+		}
+		sizePw.close();
+		timePw.close();
+	}
 	
+	public void inspectAllPacketsTime(String appName) {
+		System.out.println("STARTING INSPECTION WITH TIME");
+		for (Packet p : packets) {
+			inspectPacketTime(p, appName);
+		}
+		sizePw.close();
+		timePw.close();
+	}
+
+
 	public void inspectAllPackets() {
 		System.out.println("STARTING INSPECTION");
 		for (Packet p : packets) {
 			inspectPacket(p);
 		}
-		
+
 		System.out.println("STATISTICS FOR ALL");
 		System.out.println("size of adPackets " + adPackets.size());
 		System.out.println("size of adDNSPackets " + adDNSPackets.size());
 		System.out.println("size of adDNSRequests " + adDNSRequests.size());
 		System.out.println("size of adAddrs " + adAddrs.size());
-		
+
 		calculateAdSize();
 		calculateAllSize();
-		
+
 		System.out.println("ad_size " + ad_size);
 		System.out.println("all_size " + all_size);
 	}
-	
+
 	public void showResultForSpecificProgram(String appName) {
 		Integer appNameIndex = null;
 		Iterator iter = appNameMap.entrySet().iterator();
 		while (iter.hasNext()) {
-			Map.Entry<Integer, String> entry = (Map.Entry<Integer, String>) iter.next();
+			Map.Entry<Integer, String> entry = (Map.Entry<Integer, String>) iter
+					.next();
 			Integer index = entry.getKey();
 			String name = entry.getValue();
 			if (name.equals(appName)) {
@@ -396,7 +448,7 @@ public class AdAnalyzer {
 		}
 		return s;
 	}
-	
+
 	public int calculateAllSize() {
 		all_size = 0;
 		for (Packet p : packets) {
@@ -404,7 +456,7 @@ public class AdAnalyzer {
 		}
 		return all_size;
 	}
-	
+
 	public int calculateAdSize() {
 		ad_size = 0;
 		for (Packet p : adDNSPackets)
