@@ -11,8 +11,13 @@ public class Main {
 		aa.init(args);
 		//System.setOut(new PrintStream(new File("/Users/jiehou/Desktop/output")));
 		//aa.printAllPackets();
-		//aa.inspectAllPackets();
-		aa.inspectAllPacketsTime("com.rovio.angrybirdsseasons");
-		//aa.showResultForSpecificProgram("com.rovio.angrybirdsseasons");
+		aa.inspectAllPackets();
+		//aa.inspectAllPacketsTime("com.dictionary");
+		//aa.inspectAllPacketsTime("com.rovio.angrybirdsseasons");
+		//aa.inspectAllPacketsTime("net.zedge.android");
+		//aa.inspectAllPacketsTime("twc.weatherController");
+		//aa.inspectAllPacketsTime("com.halfbrick.fruitninjafree");
+		//aa.inspectAllPacketsTime("com.mobiperf.AD_TEST");
+		aa.showResultForSpecificProgram("com.halfbrick.fruitninjafree");
 	}
 }

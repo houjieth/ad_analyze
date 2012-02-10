@@ -29,8 +29,16 @@ public class AdAnalyzer {
 
 	private int ad_size = 0;
 	private int all_size = 0;
-	private PrintWriter sizePw;
-	private PrintWriter timePw;
+	private PrintWriter sizeDL, sizeUL, size;
+	private PrintWriter time;
+	private static String outDir = "/root/programming/AdLibrary/timeline/";
+	private PrintWriter getPrintWriter(String name) throws FileNotFoundException
+	{
+		File file = new File(name);
+		FileOutputStream fos = new FileOutputStream(file);
+		OutputStreamWriter osw = new OutputStreamWriter(fos);
+		return new PrintWriter(osw);
+	}
 	public AdAnalyzer() throws FileNotFoundException {
 		appNameMap = new HashMap<Integer, String>();
 		packets = new ArrayList<Packet>();
@@ -39,16 +47,12 @@ public class AdAnalyzer {
 		adDNSRequests = new ArrayList<String>();
 		adAddrs = new ArrayList<InetAddress>();
 		adlist = new AdList();
-		String sizeFileName = "/root/programming/AdLibrary/ad_analyze/size.txt";
-		String timeFileName = "/root/programming/AdLibrary/ad_analyze/time.txt";
-		File sizeFile = new File(sizeFileName);
-		File timeFile = new File(timeFileName);
-		FileOutputStream sizeOs = new FileOutputStream(sizeFile);
-		FileOutputStream timeOs = new FileOutputStream(timeFile);
-		OutputStreamWriter sizeOsw = new OutputStreamWriter(sizeOs);
-		OutputStreamWriter timeOsw = new OutputStreamWriter(timeOs);
-		sizePw = new PrintWriter(sizeOsw);
-		timePw = new PrintWriter(timeOsw);
+		File dir = new File(outDir);
+		for(File file : dir.listFiles()){
+			if(file.isDirectory())
+				continue;
+			
+		}
 	}
 
 	public void init(String[] args) {
@@ -224,22 +228,27 @@ public class AdAnalyzer {
 
 	public void inspectPacketTime(Packet p) {
 		//String name = getAppNameFromIndex(getAppNameIndex(p));
-		sizePw.println(p.len);
-		timePw.println(p.sec);
+		
 	}
 
 	public void inspectPacketTime(Packet p, String appName) {
+		
 		String name = getAppNameFromIndex(getAppNameIndex(p));
 		if (name == null)
 			return;
 		if (!name.equals(appName))
 			return;
-		if (isUpLink(p))
-			return;
-		sizePw.println(p.len);
-		timePw.println(p.sec);
+		if (isDownLink(p)){
+			sizeDL.println(p.len);
+			sizeUL.println(0);
+		}
+		else{
+			sizeUL.println(p.len);
+			sizeDL.println(0);
 
-		
+		}
+		size.println(p.len);
+		time.println(p.sec);
 	}
 
 	
@@ -316,17 +325,24 @@ public class AdAnalyzer {
 		for (Packet p : packets) {
 			inspectPacketTime(p);
 		}
-		sizePw.close();
-		timePw.close();
+
 	}
 	
-	public void inspectAllPacketsTime(String appName) {
+	public void inspectAllPacketsTime(String appName) throws FileNotFoundException {
+		
+		sizeDL = getPrintWriter(outDir + appName + ".Size.Downlink.LOG");
+		sizeUL = getPrintWriter(outDir + appName + ".Size.Uplink.LOG");
+		size = getPrintWriter(outDir + appName + ".Size.Total.LOG");
+		time = getPrintWriter(outDir + appName + ".Time.LOG");
+		
 		System.out.println("STARTING INSPECTION WITH TIME");
 		for (Packet p : packets) {
 			inspectPacketTime(p, appName);
 		}
-		sizePw.close();
-		timePw.close();
+		sizeDL.close();
+		sizeUL.close();
+		time.close();
+		size.close();
 	}
 
 
