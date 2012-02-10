@@ -1,0 +1,12 @@
+/sbin/adbd
+com.fd.httpd
+com.halfbrick.fruitninjafree
+com.tencent.mm
+com.google.process.gapps
+/system/bin/netd
+com.google.android.apps.maps:NetworkLocationService
+com.google.android.gm
+com.facebook.katana
+system_server
+/system/bin/dhcpcd
+.
